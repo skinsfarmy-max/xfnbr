@@ -3,115 +3,107 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GitHub Realtime Chat</title>
+    <title>CloudChat Prime</title>
     <style>
-        * { box-sizing: border-box; }
-        body { 
-            font-family: -apple-system, system-ui, "Segoe UI", Roboto, sans-serif; 
-            margin: 0; 
-            display: flex; 
-            flex-direction: column; 
-            height: 100vh; 
-            background-color: #f6f8fa; 
+        :root {
+            --bg: #0f111a;
+            --surface: #1a1c29;
+            --accent: #7289da;
+            --admin-gold: #ffcc00;
+            --text: #ffffff;
         }
-        
-        /* Шапка */
+
+        * { box-sizing: border-box; transition: 0.25s cubic-bezier(0.4, 0, 0.2, 1); }
+        body { font-family: 'Inter', -apple-system, sans-serif; margin: 0; background: var(--bg); color: var(--text); height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+
+        /* Профиль и Ранги */
         header { 
-            background: #24292e; 
-            color: white; 
-            padding: 12px 20px; 
-            display: flex; 
-            justify-content: space-between;
-            align-items: center;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            background: var(--surface); padding: 15px 20px; border-bottom: 2px solid #2d2f3f;
+            display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 15px;
         }
-        .user-box { display: flex; align-items: center; gap: 10px; }
-        .user-box input {
-            background: #3f4448;
-            border: 1px solid #444d56;
-            color: white;
-            padding: 6px 12px;
-            border-radius: 6px;
-            outline: none;
-            font-size: 14px;
-        }
-
-        /* Окно сообщений */
-        #chat-window { 
-            flex: 1; 
-            overflow-y: auto; 
-            padding: 20px; 
-            display: flex; 
-            flex-direction: column; 
-            gap: 12px; 
-        }
+        .user-card { display: flex; align-items: center; gap: 12px; background: rgba(0,0,0,0.2); padding: 8px 15px; border-radius: 12px; }
+        .avatar-circle { width: 40px; height: 40px; background: var(--accent); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 20px; border: 2px solid rgba(255,255,255,0.1); }
         
-        .message { 
-            background: white; 
-            padding: 12px 16px; 
-            border-radius: 12px; 
-            max-width: 85%; 
-            width: fit-content;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.08);
-            border: 1px solid #e1e4e8;
+        .profile-inputs input { 
+            background: #2d2f3f; border: 1px solid #3d3f4f; color: white; 
+            padding: 8px 12px; border-radius: 8px; outline: none; width: 140px; font-size: 13px;
         }
-        .message .user { font-weight: 600; color: #0969da; font-size: 0.9em; display: block; margin-bottom: 4px; }
-        .message .text { color: #1f2328; line-height: 1.5; word-break: break-word; }
+        .profile-inputs input:focus { border-color: var(--accent); box-shadow: 0 0 10px rgba(114,137,218,0.3); }
 
-        /* Поле ввода */
-        footer { 
-            background: white; 
-            padding: 20px; 
-            display: flex; 
-            gap: 12px; 
-            border-top: 1px solid #d0d7de;
-        }
-        #msg-text { 
-            flex: 1; 
-            padding: 12px 16px; 
-            border: 1px solid #d0d7de; 
-            border-radius: 8px; 
-            outline: none; 
-            font-size: 16px;
-            transition: border 0.2s;
-        }
-        #msg-text:focus { border-color: #0969da; box-shadow: 0 0 0 3px rgba(9,105,218,0.1); }
+        /* Окно чата */
+        #chat-window { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 15px; scroll-behavior: smooth; }
         
-        #send-btn { 
-            background: #1f883d; 
-            color: white; 
-            border: none; 
-            padding: 0 24px; 
-            border-radius: 8px; 
-            cursor: pointer; 
-            font-weight: 600;
-            font-size: 14px;
+        .msg { 
+            background: var(--surface); padding: 12px 16px; border-radius: 4px 18px 18px 18px; 
+            max-width: 85%; width: fit-content; position: relative; border-left: 3px solid var(--accent);
+            animation: emerge 0.3s ease-out;
         }
-        #send-btn:hover { background: #1a7f37; }
+        @keyframes emerge { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* --- ЭФФЕКТЫ СОЗДАТЕЛЯ --- */
+        .is-creator { 
+            border: 2px solid transparent;
+            border-image: linear-gradient(45deg, #ff0000, #fffb00, #00ffd5, #ff00c8) 1;
+            background: linear-gradient(rgba(26,28,41,0.95), rgba(26,28,41,0.95)) padding-box, 
+                        linear-gradient(45deg, #ff0000, #fffb00, #00ffd5, #ff00c8) border-box !important;
+            box-shadow: 0 0 20px rgba(255, 204, 0, 0.2);
+        }
+        .creator-text {
+            background: linear-gradient(to right, #fffb00, #ff00c8, #00ffd5);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-weight: 900;
+            animation: rainbow-text 3s infinite linear;
+        }
+        @keyframes rainbow-text { from { filter: hue-rotate(0deg); } to { filter: hue-rotate(360deg); } }
+
+        .rank-tag { font-size: 9px; padding: 2px 6px; border-radius: 4px; font-weight: bold; margin-bottom: 4px; display: inline-block; letter-spacing: 0.5px; }
+        .tag-creator { background: var(--admin-gold); color: black; }
+        .tag-member { background: #3d3f4f; color: #aaa; }
+
+        /* Футер */
+        footer { background: var(--surface); padding: 15px 25px; display: flex; gap: 12px; align-items: center; }
+        #msg-input { flex: 1; background: #2d2f3f; border: none; padding: 14px 20px; border-radius: 25px; color: white; outline: none; }
+        #send-btn { background: var(--accent); color: white; border: none; width: 45px; height: 45px; border-radius: 50%; cursor: pointer; font-size: 18px; display: flex; align-items: center; justify-content: center; }
+        #send-btn:hover { transform: scale(1.1) rotate(5deg); background: #5b6eae; }
+
+        /* Скрытая админка */
+        .admin-controls { display: none; background: #cf222e; color: white; text-align: center; padding: 5px; font-size: 12px; font-weight: bold; cursor: pointer; }
+        .is-master .admin-controls { display: block; }
+        
+        .delete-x { color: #ff4d4d; font-weight: bold; cursor: pointer; margin-left: 10px; font-size: 14px; opacity: 0.3; }
+        .delete-x:hover { opacity: 1; }
     </style>
 </head>
-<body>
+<body id="app-body">
+
+<div class="admin-controls" onclick="window.clearChat()">[ ОЧИСТИТЬ ВСЕ СООБЩЕНИЯ ]</div>
 
 <header>
-    <div style="font-weight: bold;">Public Chat</div>
-    <div class="user-box">
-        <span>Ваш ник:</span>
-        <input type="text" id="username" placeholder="Аноним" maxlength="15">
+    <div class="user-card">
+        <div id="p-avatar" class="avatar-circle">👤</div>
+        <div>
+            <div style="font-size: 12px; color: #888;">Профиль</div>
+            <div id="p-lvl" style="font-size: 10px; color: var(--accent); font-weight: bold;">Level 1 (XP: 0)</div>
+        </div>
+    </div>
+    <div class="profile-inputs">
+        <input type="text" id="username" placeholder="Ваш ник" maxlength="15">
+        <input type="text" id="email" placeholder="Секретная почта">
     </div>
 </header>
 
 <div id="chat-window"></div>
 
 <footer>
-    <input type="text" id="msg-text" placeholder="Введите сообщение..." autocomplete="off">
-    <button id="send-btn">Отправить</button>
+    <input type="text" id="msg-input" placeholder="Введите сообщение..." autocomplete="off">
+    <button id="send-btn">🚀</button>
 </footer>
 
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-    import { getDatabase, ref, push, onChildAdded, serverTimestamp, query, limitToLast } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+    import { getDatabase, ref, push, onChildAdded, onChildRemoved, remove, serverTimestamp, query, limitToLast, set } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
-    // Ваши данные (уже вставлены)
     const firebaseConfig = {
         apiKey: "AIzaSyD2KBDPMea8hWT4vv9ac613bQboI4hpAVU",
         authDomain: "chat-a5fe6.firebaseapp.com",
@@ -122,58 +114,95 @@
         appId: "1:297636975324:web:de823d9d84a7abc3801a19"
     };
 
-    // Инициализация
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
-    const messagesRef = ref(db, 'chat_data');
+    const chatRef = ref(db, 'chat_data');
+    const MASTER = "skinsfarmy@gmail.com";
 
     const chatWindow = document.getElementById('chat-window');
-    const msgInput = document.getElementById('msg-text');
+    const msgInput = document.getElementById('msg-input');
+    const emailInput = document.getElementById('email');
     const userInput = document.getElementById('username');
-    const sendBtn = document.getElementById('send-btn');
 
-    // Подгружаем ник из памяти браузера, если он там есть
-    userInput.value = localStorage.getItem('chat_nickname') || "";
+    // --- ЛОГИКА XP И РАНГОВ ---
+    let xp = parseInt(localStorage.getItem('chat_xp') || 0);
+    const updateXP = () => {
+        xp += 5;
+        localStorage.setItem('chat_xp', xp);
+        const lvl = Math.floor(xp / 100) + 1;
+        document.getElementById('p-lvl').innerText = `Level ${lvl} (XP: ${xp})`;
+    };
 
-    // Функция отправки
-    function sendMessage() {
-        const user = userInput.value.trim() || "Аноним";
+    const avas = ['🔥', '👾', '👻', '💎', '🦊', '🚀', '⭐', '🍀'];
+    const getAva = (nick) => avas[nick.length % avas.length];
+
+    window.checkMaster = () => {
+        const mail = emailInput.value.trim().toLowerCase();
+        localStorage.setItem('chat_email', mail);
+        mail === MASTER ? document.getElementById('app-body').classList.add('is-master') : document.getElementById('app-body').classList.remove('is-master');
+    };
+    emailInput.oninput = window.checkMaster;
+
+    userInput.value = localStorage.getItem('chat_nick') || "";
+    emailInput.value = localStorage.getItem('chat_email') || "";
+    window.checkMaster();
+
+    // --- ОТПРАВКА ---
+    window.send = () => {
         const text = msgInput.value.trim();
-
+        const nick = userInput.value.trim() || "Аноним";
         if (text) {
-            // Сохраняем ник в память
-            localStorage.setItem('chat_nickname', user);
-            
-            push(messagesRef, {
-                name: user,
-                message: text,
-                time: serverTimestamp()
-            });
+            localStorage.setItem('chat_nick', nick);
+            push(chatRef, { u: nick, m: text, e: emailInput.value.trim().toLowerCase(), t: serverTimestamp() });
             msgInput.value = '';
+            updateXP();
         }
-    }
+    };
 
-    sendBtn.onclick = sendMessage;
-    msgInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') sendMessage(); });
+    document.getElementById('send-btn').onclick = window.send;
+    msgInput.onkeypress = (e) => { if(e.key === 'Enter') window.send(); };
+    window.clearChat = () => { if(confirm("Очистить историю?")) set(chatRef, null); };
+    window.del = (id) => remove(ref(db, `chat_data/${id}`));
 
-    // Загрузка последних 100 сообщений
-    const lastMessagesQuery = query(messagesRef, limitToLast(100));
-    
-    onChildAdded(lastMessagesQuery, (snapshot) => {
-        const msg = snapshot.val();
-        const msgDiv = document.createElement('div');
-        msgDiv.className = 'message';
-        msgDiv.innerHTML = `<span class="user">${escapeHtml(msg.name)}</span><div class="text">${escapeHtml(msg.message)}</div>`;
+    // --- ОТОБРАЖЕНИЕ СООБЩЕНИЙ ---
+    onChildAdded(query(chatRef, limitToLast(40)), (snap) => {
+        const d = snap.val();
+        const id = snap.key;
+        const isM = d.e === MASTER;
+        const time = d.t ? new Date(d.t).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}) : "";
+
+        const div = document.createElement('div');
+        div.className = `msg ${isM ? 'is-creator' : ''}`;
+        div.id = 'm-' + id;
         
-        chatWindow.appendChild(msgDiv);
+        // Поиск картинок в тексте
+        let messageHTML = escape(d.m);
+        if (d.m.match(/\.(jpeg|jpg|gif|png)$/) != null || d.m.includes('http')) {
+            messageHTML = messageHTML.replace(/(https?:\/\/[^\s]+)/g, '<a href="$1" target="_blank" style="color:#7289da">$1</a>');
+        }
+
+        div.innerHTML = `
+            <span class="rank-tag ${isM ? 'tag-creator' : 'tag-member'}">${isM ? 'OWNER' : 'LEVEL ' + (Math.floor(d.u.length * 1.5))}</span>
+            <div style="display:flex; align-items:center; gap:8px; margin-bottom:5px;">
+                <span style="font-size:14px;">${getAva(d.u)}</span>
+                <span class="${isM ? 'creator-text' : ''}" style="font-weight:bold; font-size:13px; color:${isM ? '#fff' : '#7289da'}">${escape(d.u)}</span>
+            </div>
+            <div style="font-size:14px; line-height:1.4;">${messageHTML}</div>
+            <div style="text-align:right; margin-top:5px; font-size:9px; color:#555;">
+                ${time}
+                ${document.getElementById('app-body').classList.contains('is-master') ? `<span class="delete-x" onclick="del('${id}')">×</span>` : ''}
+            </div>
+        `;
+        chatWindow.appendChild(div);
         chatWindow.scrollTop = chatWindow.scrollHeight;
     });
 
-    // Защита от XSS (взлома через текст сообщений)
-    function escapeHtml(text) {
-        const div = document.createElement('div');
-        div.textContent = text;
-        return div.innerHTML;
+    onChildRemoved(chatRef, (s) => document.getElementById('m-' + s.key)?.remove());
+
+    function escape(s) {
+        let t = document.createElement('div');
+        t.textContent = s;
+        return t.innerHTML;
     }
 </script>
 
