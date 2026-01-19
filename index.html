@@ -3,115 +3,130 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>CloudChat Admin Pro</title>
+    <title>CloudChat OS + DM</title>
     <style>
         :root { --bg: #0b0e14; --panel: #1a1d26; --accent: #4285F4; --admin: #ea4335; --green: #2ecc71; }
         * { box-sizing: border-box; font-family: 'Segoe UI', system-ui, sans-serif; }
-        body, html { margin: 0; padding: 0; height: 100%; background: var(--bg); color: white; display: flex; flex-direction: column; overflow: hidden; }
+        body, html { margin: 0; padding: 0; height: 100%; background: var(--bg); color: white; display: flex; overflow: hidden; }
 
-        /* Экраны входа и бана */
-        #login-screen, #ban-screen { position: fixed; inset: 0; background: var(--bg); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 4000; text-align: center; padding: 20px; }
-        #ban-screen { background: #4a0000; display: none; }
-        .google-btn { background: white; color: #333; border: none; padding: 14px 28px; border-radius: 12px; font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 10px; font-size: 16px; }
+        /* Боковая колонка чатов (Справа) */
+        #side-panel { width: 300px; background: var(--panel); border-left: 1px solid #2d313d; display: flex; flex-direction: column; transition: 0.3s; }
+        .side-header { padding: 15px; font-weight: bold; border-bottom: 1px solid #2d313d; display: flex; justify-content: space-between; }
+        #chats-list { flex: 1; overflow-y: auto; }
+        .chat-item { padding: 12px 15px; display: flex; align-items: center; gap: 12px; cursor: pointer; border-bottom: 1px solid #222; transition: 0.2s; }
+        .chat-item:hover { background: rgba(255,255,255,0.05); }
+        .chat-item.active { background: rgba(66, 133, 244, 0.1); border-left: 3px solid var(--accent); }
+        .chat-item img { width: 40px; height: 40px; border-radius: 50%; }
+        .chat-item-info { flex: 1; overflow: hidden; }
+        .chat-item-name { font-size: 14px; font-weight: bold; }
+        .chat-item-last { font-size: 12px; color: #666; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
-        /* Шапка */
-        header { background: var(--panel); padding: 10px 15px; border-bottom: 1px solid #2d313d; display: flex; justify-content: space-between; align-items: center; flex-shrink: 0; }
-        .user-chip { display: flex; align-items: center; gap: 10px; cursor: pointer; padding: 5px; border-radius: 8px; }
+        /* Основная зона чата */
+        main { flex: 1; display: flex; flex-direction: column; position: relative; min-width: 0; }
+        header { background: var(--panel); padding: 10px 15px; border-bottom: 1px solid #2d313d; display: flex; justify-content: space-between; align-items: center; }
+        .user-chip { display: flex; align-items: center; gap: 10px; cursor: pointer; }
         .user-chip img { width: 35px; height: 35px; border-radius: 50%; border: 2px solid var(--accent); }
 
-        /* Чат */
         #chat-window { flex: 1; overflow-y: auto; padding: 15px; display: flex; flex-direction: column; gap: 10px; }
         .msg { background: var(--panel); padding: 10px 14px; border-radius: 15px; max-width: 85%; align-self: flex-start; border: 1px solid #2d313d; position: relative; }
         .msg.is-me { align-self: flex-end; border-color: var(--accent); background: #232a3d; }
         .msg.is-admin { border-left: 4px solid var(--admin); }
-        .msg-info { display: flex; align-items: center; gap: 6px; margin-bottom: 4px; cursor: pointer; }
-        .msg-info img { width: 18px; height: 18px; border-radius: 50%; }
-
-        /* Удаление сообщений */
-        .del-msg-btn { position: absolute; top: 5px; right: 5px; background: none; border: none; color: #555; cursor: pointer; font-size: 16px; display: none; }
+        
+        .del-msg-btn { position: absolute; top: 5px; right: 5px; background: none; border: none; color: #555; cursor: pointer; display: none; }
         .is-boss .msg:hover .del-msg-btn { display: block; }
 
-        /* Модальные окна */
-        .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.9); display: none; align-items: center; justify-content: center; z-index: 3000; padding: 20px; }
-        .modal-content { background: var(--panel); padding: 25px; border-radius: 20px; width: 100%; max-width: 340px; text-align: center; border: 1px solid #3d4251; max-height: 80vh; overflow-y: auto; }
-        .modal-content img { width: 80px; height: 80px; border-radius: 50%; border: 3px solid var(--accent); margin-bottom: 10px; }
-        .modal-content input { width: 100%; padding: 12px; margin: 8px 0; background: #0b0e14; border: 1px solid #3d4251; color: white; border-radius: 10px; outline: none; }
-
-        .btn-act { width: 100%; padding: 12px; border-radius: 10px; border: none; font-weight: bold; cursor: pointer; margin-top: 10px; transition: 0.2s; }
-        .btn-blue { background: var(--accent); color: white; }
-        .btn-red { background: var(--admin); color: white; }
-        .btn-green { background: var(--green); color: white; }
-        
-        /* Список забаненных внутри модалки */
-        #ban-list-container { margin-top: 15px; text-align: left; background: #0b0e14; border-radius: 10px; padding: 10px; display: none; }
-        .ban-item { display: flex; justify-content: space-between; align-items: center; padding: 5px 0; border-bottom: 1px solid #222; font-size: 11px; }
-
         /* Футер */
-        #typing-indicator { font-size: 11px; color: #888; padding: 0 15px 5px; height: 15px; }
         footer { background: var(--panel); padding: 10px; display: flex; gap: 10px; border-top: 1px solid #2d313d; }
-        #msg-input { flex: 1; background: #0b0e14; border: 1px solid #3d4251; padding: 12px 18px; border-radius: 25px; color: white; outline: none; }
+        #msg-input { flex: 1; background: #0b0e14; border: 1px solid #3d4251; padding: 12px; border-radius: 20px; color: white; outline: none; }
+
+        /* Модалка */
+        .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.9); display: none; align-items: center; justify-content: center; z-index: 3000; padding: 20px; }
+        .modal-content { background: var(--panel); padding: 25px; border-radius: 20px; width: 100%; max-width: 340px; text-align: center; border: 1px solid #3d4251; }
+        .modal-content img { width: 80px; height: 80px; border-radius: 50%; border: 3px solid var(--accent); margin-bottom: 10px; }
+        
+        /* Кнопка ЛС в профиле */
+        .btn-dm { background: var(--green); color: white; border: none; padding: 10px; border-radius: 50%; cursor: pointer; font-size: 18px; margin-top: 10px; display: inline-flex; align-items: center; justify-content: center; width: 45px; height: 45px; }
+
+        #login-screen, #ban-screen { position: fixed; inset: 0; background: var(--bg); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 5000; }
+        
+        @media (max-width: 768px) {
+            #side-panel { position: absolute; right: 0; top: 0; bottom: 0; z-index: 100; transform: translateX(100%); }
+            #side-panel.open { transform: translateX(0); }
+        }
     </style>
 </head>
 <body id="app-body">
 
 <div id="login-screen">
-    <h1 style="margin-bottom: 20px;">CloudChat</h1>
-    <button class="google-btn" onclick="login()">Войти через Google</button>
+    <h1>CloudChat</h1>
+    <button class="google-btn" onclick="login()" style="padding:15px 30px; border-radius:10px; font-weight:bold; cursor:pointer;">Войти через Google</button>
 </div>
 
-<div id="ban-screen">
-    <h1 style="font-size: 60px;">🚫</h1>
-    <h2>АККАУНТ ЗАБЛОКИРОВАН</h2>
-    <p>Вы нарушили правила чата.</p>
+<div id="ban-screen" style="display:none; text-align:center; background:red; z-index:6000; position:fixed; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center;">
+    <h1>🚫 БАН</h1>
 </div>
 
-<header>
-    <div class="user-chip" id="btn-my-profile">
-        <img id="my-pic" src="">
-        <div style="display:flex; flex-direction:column;">
-            <span id="my-name" style="font-size:14px; font-weight:bold;">...</span>
-            <span id="my-role" style="font-size:10px; color:#888;">Загрузка...</span>
+<main>
+    <header>
+        <div class="user-chip" id="btn-my-profile">
+            <img id="my-pic" src="">
+            <div>
+                <div id="my-name" style="font-weight:bold; font-size:14px;">...</div>
+                <div id="chat-title" style="font-size:10px; color:var(--accent);">Общий чат</div>
+            </div>
         </div>
+        <button onclick="toggleSide()" id="toggle-side-btn" style="background:none; border:none; color:white; font-size:20px; cursor:pointer;">💬</button>
+    </header>
+
+    <div id="chat-window"></div>
+    <div id="typing-indicator" style="padding: 5px 15px; font-size: 11px; color: #555;"></div>
+
+    <footer>
+        <input type="text" id="msg-input" placeholder="Сообщение..." autocomplete="off">
+        <button onclick="sendMsg()" style="background:var(--accent); border:none; color:white; width:45px; height:45px; border-radius:50%; cursor:pointer;">🚀</button>
+    </footer>
+</main>
+
+<aside id="side-panel">
+    <div class="side-header">
+        Чаты
+        <button onclick="toggleSide()" style="background:none; border:none; color:#555; cursor:pointer;">×</button>
     </div>
-    <button onclick="logout()" style="color:#555; background:none; border:none; font-size:11px; cursor:pointer;">ВЫЙТИ</button>
-</header>
-
-<div id="chat-window"></div>
-<div id="typing-indicator"></div>
-
-<footer>
-    <input type="text" id="msg-input" placeholder="Сообщение..." autocomplete="off">
-    <button onclick="sendMsg()" style="background:var(--accent); border:none; width:45px; height:45px; border-radius:50%; color:white; cursor:pointer;">🚀</button>
-</footer>
+    <div id="chats-list">
+        <div class="chat-item active" onclick="switchChat('global')">
+            <img src="https://cdn-icons-png.flaticon.com/512/921/921490.png">
+            <div class="chat-item-info">
+                <div class="chat-item-name">Общий чат</div>
+                <div class="chat-item-last">Все пользователи</div>
+            </div>
+        </div>
+        <div id="dm-list-container"></div>
+    </div>
+</aside>
 
 <div id="modal-prof" class="modal">
     <div class="modal-content">
         <img id="view-pic" src="">
         <h3 id="view-name">...</h3>
         <p id="view-status" style="color:#888; font-size:13px;">...</p>
-        <p id="view-stats" style="color:var(--accent); font-size:11px; font-weight:bold;"></p>
         
-        <div id="edit-box" style="display:none; margin-top:15px; border-top:1px solid #333; padding-top:10px;">
-            <input type="text" id="inp-name" placeholder="Сменить имя">
-            <input type="text" id="inp-status" placeholder="Сменить статус">
-            <button class="btn-act btn-blue" onclick="saveMyProfile()">СОХРАНИТЬ</button>
-            <button id="btn-show-bans" class="btn-act" style="background:#444; color:white; display:none;" onclick="toggleBanList()">СПИСОК БАНОВ</button>
-            <div id="ban-list-container">
-                <p style="font-size:10px; color:var(--admin); font-weight:bold; margin-bottom:5px;">ЗАБАНЕННЫЕ ID:</p>
-                <div id="ban-list-content"></div>
+        <div id="profile-actions">
+            <button id="dm-btn" class="btn-dm" title="Написать ЛС" onclick="startDM()">✉️</button>
+            
+            <div id="edit-box" style="display:none; margin-top:15px; border-top:1px solid #333; padding-top:10px;">
+                <input type="text" id="inp-name" placeholder="Сменить имя" style="width:100%; padding:8px; margin-bottom:5px; background:#000; border:1px solid #333; color:white;">
+                <button onclick="saveMyProfile()" style="width:100%; padding:8px; background:var(--accent); border:none; color:white; border-radius:5px;">СОХРАНИТЬ</button>
+                <button id="admin-ban-btn" onclick="execBan()" style="width:100%; padding:8px; background:var(--admin); border:none; color:white; border-radius:5px; margin-top:5px; display:none;">ЗАБАНЬ</button>
             </div>
         </div>
-
-        <button id="ban-btn" class="btn-act btn-red" style="display:none;" onclick="execBan()">ЗАБАНЬ</button>
-        <button id="unban-btn" class="btn-act btn-green" style="display:none;" onclick="execUnban()">РАЗБАНИТЬ</button>
-        <button onclick="closeMod()" style="background:none; border:none; color:#777; margin-top:15px; cursor:pointer;">ЗАКРЫТЬ</button>
+        <button onclick="closeMod()" style="margin-top:20px; background:none; border:none; color:#555; cursor:pointer;">ЗАКРЫТЬ</button>
     </div>
 </div>
 
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
     import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-    import { getDatabase, ref, push, onChildAdded, onChildRemoved, onValue, serverTimestamp, get, child, update, remove } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+    import { getDatabase, ref, push, onChildAdded, onValue, serverTimestamp, get, child, update, remove } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
     const firebaseConfig = {
         apiKey: "AIzaSyD2KBDPMea8hWT4vv9ac613bQboI4hpAVU",
@@ -126,192 +141,136 @@
     const provider = new GoogleAuthProvider();
 
     let user = null;
+    let currentRoom = 'global';
     let targetUID = null;
     const BOSS = "skinsfarmy@gmail.com";
 
     window.login = () => signInWithPopup(auth, provider);
     window.logout = () => signOut(auth).then(() => location.reload());
+    window.toggleSide = () => document.getElementById('side-panel').classList.toggle('open');
 
     onAuthStateChanged(auth, async (u) => {
         if (u) {
             user = u;
-            onValue(ref(db, `banned/${user.uid}`), (s) => {
-                if (s.exists()) {
-                    document.getElementById('ban-screen').style.display = 'flex';
-                    document.getElementById('app-body').innerHTML = '';
-                    signOut(auth);
-                }
-            });
-
+            onValue(ref(db, `banned/${user.uid}`), (s) => { if (s.exists()) location.reload(); });
             document.getElementById('login-screen').style.display = 'none';
-            if (user.email === BOSS) {
-                document.body.classList.add('is-boss');
-                document.getElementById('btn-show-bans').style.display = 'block';
-            }
+            if (user.email === BOSS) document.body.classList.add('is-boss');
 
             const uRef = ref(db, `users/${user.uid}`);
             const uSnap = await get(uRef);
             if (!uSnap.exists()) {
-                await update(uRef, { name: user.displayName, pic: user.photoURL, status: "Всем привет!", uid: user.uid, msgs: 0 });
+                await update(uRef, { name: user.displayName, pic: user.photoURL, status: "Active", uid: user.uid });
             }
-            refreshHeader();
+            
+            document.getElementById('my-name').innerText = user.displayName;
+            document.getElementById('my-pic').src = user.photoURL;
             document.getElementById('btn-my-profile').onclick = () => openProfile(user.uid);
+            
+            loadDMList();
+            switchChat('global');
         } else {
             document.getElementById('login-screen').style.display = 'flex';
         }
     });
 
-    async function refreshHeader() {
-        const s = await get(ref(db, `users/${user.uid}`));
-        document.getElementById('my-name').innerText = s.val().name;
-        document.getElementById('my-pic').src = s.val().pic;
-        document.getElementById('my-role').innerText = (user.email === BOSS) ? "СОЗДАТЕЛЬ" : "УЧАСТНИК";
+    // --- ЛОГИКА КОМНАТ ---
+    window.switchChat = (roomID, otherUserName = "Общий чат") => {
+        currentRoom = roomID;
+        document.getElementById('chat-window').innerHTML = '';
+        document.getElementById('chat-title').innerText = otherUserName;
+        
+        const path = (roomID === 'global') ? 'chat_data' : `direct_chats/${roomID}`;
+        onChildAdded(ref(db, path), (snap) => {
+            if (currentRoom !== roomID) return;
+            renderMsg(snap.val(), snap.key);
+        });
+        
+        if(window.innerWidth <= 768) toggleSide();
+    };
+
+    window.startDM = () => {
+        if (targetUID === user.uid) return alert("Это вы");
+        const dmID = [user.uid, targetUID].sort().join('_');
+        get(ref(db, `users/${targetUID}`)).then(s => {
+            const name = s.val().name;
+            // Добавляем в список активных чатов
+            update(ref(db, `users/${user.uid}/chats/${dmID}`), { with: targetUID, name: name, pic: s.val().pic });
+            update(ref(db, `users/${targetUID}/chats/${dmID}`), { with: user.uid, name: user.displayName, pic: user.photoURL });
+            
+            closeMod();
+            switchChat(dmID, name);
+        });
+    };
+
+    function loadDMList() {
+        onValue(ref(db, `users/${user.uid}/chats`), (snap) => {
+            const container = document.getElementById('dm-list-container');
+            container.innerHTML = '';
+            snap.forEach(child => {
+                const data = child.val();
+                const dmID = child.key;
+                container.innerHTML += `
+                    <div class="chat-item" onclick="switchChat('${dmID}', '${data.name}')">
+                        <img src="${data.pic}">
+                        <div class="chat-item-info">
+                            <div class="chat-item-name">${data.name}</div>
+                            <div class="chat-item-last">Личное сообщение</div>
+                        </div>
+                    </div>
+                `;
+            });
+        });
     }
 
-    // --- МОДАЛКА ПРОФИЛЯ ---
+    // --- ПРОФИЛЬ ---
     window.openProfile = async (uid) => {
         targetUID = uid;
         const s = await get(ref(db, `users/${uid}`));
-        if (!s.exists()) return;
         const data = s.val();
-        
         document.getElementById('view-pic').src = data.pic;
         document.getElementById('view-name').innerText = data.name;
         document.getElementById('view-status').innerText = data.status;
-        document.getElementById('view-stats').innerText = `СООБЩЕНИЙ: ${data.msgs || 0}`;
         
-        // Показываем настройки если свой профиль
-        document.getElementById('edit-box').style.display = (uid === user.uid) ? 'block' : 'none';
-        document.getElementById('ban-list-container').style.display = 'none'; // Скрываем список банов при открытии
-
-        // Кнопки бана для админа
-        document.getElementById('ban-btn').style.display = 'none';
-        document.getElementById('unban-btn').style.display = 'none';
-        if (user.email === BOSS && uid !== user.uid) {
-            const b = await get(ref(db, `banned/${uid}`));
-            if (b.exists()) document.getElementById('unban-btn').style.display = 'block';
-            else document.getElementById('ban-btn').style.display = 'block';
-        }
-
+        document.getElementById('dm-btn').style.display = (uid === user.uid) ? 'none' : 'inline-flex';
+        document.getElementById('edit-box').style.display = (uid === user.uid || user.email === BOSS) ? 'block' : 'none';
+        document.getElementById('admin-ban-btn').style.display = (user.email === BOSS && uid !== user.uid) ? 'block' : 'none';
+        
         document.getElementById('modal-prof').style.display = 'flex';
     };
 
     window.closeMod = () => document.getElementById('modal-prof').style.display = 'none';
 
-    window.saveMyProfile = async () => {
-        const n = document.getElementById('inp-name').value.trim();
-        const st = document.getElementById('inp-status').value.trim();
-        const up = {};
-        if(n) up.name = n;
-        if(st) up.status = st;
-        await update(ref(db, `users/${user.uid}`), up);
-        refreshHeader(); closeMod();
-    };
-
-    // --- АДМИНКА БАНОВ ---
-    window.execBan = async () => {
-        if(confirm("ЗАБАНИТЬ?")) {
-            await update(ref(db, `banned/${targetUID}`), { email: "hidden", date: Date.now() });
-            closeMod();
-        }
-    };
-
-    window.execUnban = async (uid) => {
-        const id = uid || targetUID;
-        await remove(ref(db, `banned/${id}`));
-        if(!uid) closeMod();
-        else toggleBanList(); // Обновить список если разбанили из списка
-    };
-
-    window.toggleBanList = async () => {
-        const container = document.getElementById('ban-list-container');
-        if (container.style.display === 'block') {
-            container.style.display = 'none';
-            return;
-        }
-        
-        const snap = await get(ref(db, 'banned'));
-        const content = document.getElementById('ban-list-content');
-        content.innerHTML = '';
-        
-        if (!snap.exists()) {
-            content.innerHTML = '<span style="font-size:10px; color:#555;">Список пуст</span>';
-        } else {
-            snap.forEach(child => {
-                const uid = child.key;
-                content.innerHTML += `
-                    <div class="ban-item">
-                        <span>ID: ${uid.substring(0,8)}...</span>
-                        <button onclick="execUnban('${uid}')" style="background:none; border:none; color:var(--accent); cursor:pointer; font-size:10px;">РАЗБАН</button>
-                    </div>
-                `;
-            });
-        }
-        container.style.display = 'block';
-    };
-
-    window.delMsg = (id) => { if(confirm("Удалить?")) remove(ref(db, `chat_data/${id}`)); };
-
-    // --- ЧАТ ---
-    window.sendMsg = async () => {
+    window.sendMsg = () => {
         const text = document.getElementById('msg-input').value.trim();
         if (!text || !user) return;
-        
-        const uRef = ref(db, `users/${user.uid}`);
-        const uSnap = await get(uRef);
-        const count = (uSnap.val().msgs || 0) + 1;
-
-        push(ref(db, 'chat_data'), {
-            uid: user.uid,
-            u: uSnap.val().name,
-            p: uSnap.val().pic,
-            m: text,
-            t: serverTimestamp(),
-            isA: (user.email === BOSS)
+        const path = (currentRoom === 'global') ? 'chat_data' : `direct_chats/${currentRoom}`;
+        push(ref(db, path), {
+            uid: user.uid, u: user.displayName, p: user.photoURL,
+            m: text, t: serverTimestamp(), isA: (user.email === BOSS)
         });
-        update(uRef, { msgs: count });
         document.getElementById('msg-input').value = '';
-        update(ref(db, `typing/${user.uid}`), null);
     };
 
-    onChildAdded(ref(db, 'chat_data'), (snap) => {
-        const d = snap.val();
-        const id = snap.key;
+    function renderMsg(d, id) {
         const isMe = user && d.uid === user.uid;
         const div = document.createElement('div');
         div.className = `msg ${isMe ? 'is-me' : ''} ${d.isA ? 'is-admin' : ''}`;
-        div.id = 'msg-' + id;
         div.innerHTML = `
-            <button class="del-msg-btn" onclick="delMsg('${id}')">×</button>
-            <div class="msg-info" onclick="openProfile('${d.uid}')">
-                <img src="${d.p}">
-                <span style="font-size:11px; font-weight:bold; color:${d.isA ? '#ea4335' : (isMe ? '#4285F4' : '#888')}">${escape(d.u)}</span>
-            </div>
-            <div style="font-size:14px; word-break:break-word;">${escape(d.m)}</div>
+            <div style="font-size:10px; opacity:0.7; margin-bottom:3px; cursor:pointer;" onclick="openProfile('${d.uid}')">${d.u}</div>
+            <div style="font-size:14px;">${escape(d.m)}</div>
+            ${(user.email === BOSS) ? `<button class="del-msg-btn" onclick="delMsg('${id}')">×</button>` : ''}
         `;
         document.getElementById('chat-window').appendChild(div);
         document.getElementById('chat-window').scrollTo(0, document.getElementById('chat-window').scrollHeight);
-    });
+    }
 
-    onChildRemoved(ref(db, 'chat_data'), (s) => document.getElementById('msg-' + s.key)?.remove());
-
-    const msgInp = document.getElementById('msg-input');
-    msgInp.oninput = () => {
-        if (user) update(ref(db, `typing/${user.uid}`), { name: user.displayName });
-        clearTimeout(window.tT);
-        window.tT = setTimeout(() => update(ref(db, `typing/${user.uid}`), null), 2000);
+    window.delMsg = (id) => {
+        const path = (currentRoom === 'global') ? 'chat_data' : `direct_chats/${currentRoom}`;
+        if(confirm("Удалить?")) remove(ref(db, `${path}/${id}`));
     };
 
-    onValue(ref(db, 'typing'), (snap) => {
-        const data = snap.val();
-        const names = [];
-        for (let id in data) { if (id !== user?.uid) names.push(data[id].name); }
-        document.getElementById('typing-indicator').innerText = names.length ? names.join(', ') + ' печатает...' : '';
-    });
-
     function escape(s) { let t = document.createElement('div'); t.textContent = s; return t.innerHTML; }
-    msgInp.onkeypress = (e) => { if(e.key === 'Enter') window.sendMsg(); };
+    document.getElementById('msg-input').onkeypress = (e) => { if(e.key === 'Enter') sendMsg(); };
 </script>
-
 </body>
 </html>
