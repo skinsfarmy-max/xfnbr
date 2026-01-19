@@ -3,77 +3,91 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>CloudChat Verified</title>
+    <title>CloudChat Pro ID</title>
     <style>
-        :root { --bg: #0b0e14; --panel: #161a23; --accent: #4285F4; --admin: #ea4335; }
-        * { box-sizing: border-box; font-family: 'Segoe UI', system-ui, sans-serif; }
+        :root { --bg: #0b0e14; --panel: #1a1d26; --accent: #4285F4; --admin: #ea4335; }
+        * { box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
         body, html { margin: 0; padding: 0; height: 100%; background: var(--bg); color: white; display: flex; flex-direction: column; overflow: hidden; }
 
         /* Экран входа */
-        #login-screen { position: fixed; inset: 0; background: var(--bg); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 1000; text-align: center; }
-        .google-btn { 
-            background: white; color: #333; border: none; padding: 15px 30px; border-radius: 50px; 
-            font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 12px;
-            font-size: 16px; box-shadow: 0 10px 20px rgba(0,0,0,0.3); transition: 0.3s;
-        }
-        .google-btn:hover { transform: translateY(-3px); box-shadow: 0 15px 30px rgba(66, 133, 244, 0.3); }
+        #login-screen { position: fixed; inset: 0; background: var(--bg); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 2000; }
+        .google-btn { background: white; color: #333; border: none; padding: 12px 24px; border-radius: 8px; font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 10px; }
 
         /* Шапка */
-        header { background: var(--panel); padding: 12px 20px; border-bottom: 1px solid #252a35; display: flex; justify-content: space-between; align-items: center; }
-        .user-info { display: flex; align-items: center; gap: 12px; }
-        .user-info img { width: 38px; height: 38px; border-radius: 50%; border: 2px solid var(--accent); }
-        .user-meta { display: flex; flex-direction: column; }
+        header { background: var(--panel); padding: 10px 15px; border-bottom: 1px solid #2d313d; display: flex; justify-content: space-between; align-items: center; }
+        .my-profile-btn { display: flex; align-items: center; gap: 10px; cursor: pointer; padding: 5px 10px; border-radius: 8px; }
+        .my-profile-btn:hover { background: rgba(255,255,255,0.05); }
+        .my-profile-btn img { width: 32px; height: 32px; border-radius: 50%; border: 2px solid var(--accent); }
 
         /* Чат */
-        #chat-window { flex: 1; overflow-y: auto; padding: 15px; display: flex; flex-direction: column; gap: 10px; -webkit-overflow-scrolling: touch; background: radial-gradient(circle at center, #1a1c29 0%, #0b0e14 100%); }
-        .msg { background: var(--panel); padding: 12px; border-radius: 18px; max-width: 80%; align-self: flex-start; border: 1px solid #252a35; position: relative; }
-        .msg.is-me { align-self: flex-end; border-color: var(--accent); background: #1a2233; border-radius: 18px 18px 2px 18px; }
-        .msg.is-admin { border: 1px solid var(--admin); box-shadow: 0 0 15px rgba(234, 67, 53, 0.2); }
+        #chat-window { flex: 1; overflow-y: auto; padding: 15px; display: flex; flex-direction: column; gap: 12px; }
+        .msg { background: var(--panel); padding: 10px 14px; border-radius: 18px; max-width: 85%; align-self: flex-start; position: relative; border: 1px solid #2d313d; }
+        .msg.is-me { align-self: flex-end; background: #232a3d; border-color: var(--accent); }
+        .msg-header { display: flex; align-items: center; gap: 6px; margin-bottom: 4px; cursor: pointer; }
+        .msg-header img { width: 18px; height: 18px; border-radius: 50%; }
+
+        /* Модальные окна (Профиль) */
+        .modal { 
+            position: fixed; inset: 0; background: rgba(0,0,0,0.8); 
+            display: none; align-items: center; justify-content: center; z-index: 1500; padding: 20px;
+        }
+        .modal-content { background: var(--panel); padding: 25px; border-radius: 20px; width: 100%; max-width: 350px; text-align: center; border: 1px solid #3d4251; }
+        .modal-content img { width: 80px; height: 80px; border-radius: 50%; border: 3px solid var(--accent); margin-bottom: 15px; }
+        .modal-content input { width: 100%; padding: 10px; margin: 10px 0; background: #0b0e14; border: 1px solid #3d4251; color: white; border-radius: 8px; text-align: center; }
+        
+        .btn-save { background: var(--accent); color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; width: 100%; font-weight: bold; margin-top: 10px; }
+        .btn-close { color: #888; background: none; border: none; margin-top: 15px; cursor: pointer; }
+        .btn-ban { background: var(--admin); color: white; border: none; padding: 8px; border-radius: 8px; width: 100%; margin-top: 10px; cursor: pointer; display: none; }
+        .is-boss .btn-ban { display: block; }
 
         /* Футер */
-        footer { background: var(--panel); padding: 15px; display: flex; gap: 12px; border-top: 1px solid #252a35; }
-        #msg-input { flex: 1; background: #252a35; border: 1px solid #333; padding: 14px 20px; border-radius: 30px; color: white; outline: none; font-size: 16px; }
-        #send-btn { background: var(--accent); border: none; width: 50px; height: 50px; border-radius: 50%; color: white; cursor: pointer; font-size: 22px; transition: 0.2s; }
-        #send-btn:active { transform: scale(0.9); }
-
-        .admin-badge { background: var(--admin); color: white; font-size: 9px; padding: 2px 6px; border-radius: 4px; font-weight: bold; margin-bottom: 4px; display: inline-block; }
-        .del-btn { position: absolute; top: -10px; right: -10px; background: #ff4444; border: none; border-radius: 50%; width: 20px; height: 20px; color: white; cursor: pointer; font-size: 12px; display: none; }
-        .is-boss .del-btn { display: block; }
+        footer { background: var(--panel); padding: 10px; display: flex; gap: 10px; border-top: 1px solid #2d313d; }
+        #msg-input { flex: 1; background: #0b0e14; border: 1px solid #3d4251; padding: 12px 18px; border-radius: 25px; color: white; outline: none; }
     </style>
 </head>
 <body id="app-body">
 
 <div id="login-screen">
-    <h1 style="font-size: 40px; margin-bottom: 10px;">CloudChat</h1>
-    <p style="color: #888; margin-bottom: 30px;">Вход через Google для защиты профиля</p>
-    <button class="google-btn" onclick="login()">
-        <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" width="20">
-        Продолжить с Google
-    </button>
+    <h1 style="margin-bottom: 20px;">CloudChat Pro</h1>
+    <button class="google-btn" onclick="login()">Войти через Google</button>
+</div>
+
+<div id="modal-profile" class="modal">
+    <div class="modal-content">
+        <img id="view-pic" src="">
+        <h2 id="view-name">...</h2>
+        <p id="view-status" style="color: #888; font-size: 14px;">Статус...</p>
+        <p id="view-id" style="color: #555; font-size: 10px;">ID: ...</p>
+        <hr style="border: 0; border-top: 1px solid #333; margin: 15px 0;">
+        <div id="edit-fields" style="display: none;">
+            <input type="text" id="edit-name" placeholder="Сменить ник">
+            <input type="text" id="edit-status" placeholder="Твой статус">
+            <button class="btn-save" onclick="saveProfile()">СОХРАНИТЬ</button>
+        </div>
+        <button id="ban-action-btn" class="btn-ban" onclick="banUser()">ЗАБАНЬ ПО ID</button>
+        <button class="btn-close" onclick="closeModal()">Закрыть</button>
+    </div>
 </div>
 
 <header>
-    <div class="user-info">
+    <div class="my-profile-btn" onclick="openMyProfile()">
         <img id="my-pic" src="">
-        <div class="user-meta">
-            <span id="my-name" style="font-weight: bold;">...</span>
-            <span id="my-rank" style="font-size: 11px; color: #888;">Участник</span>
-        </div>
+        <span id="my-name" style="font-weight: bold;">...</span>
     </div>
-    <button onclick="logout()" style="color: #555; background: none; border: none; font-size: 12px; cursor: pointer;">Выйти</button>
+    <button onclick="logout()" style="color: #555; background: none; border: none; font-size: 11px;">Выйти</button>
 </header>
 
 <div id="chat-window"></div>
 
 <footer>
-    <input type="text" id="msg-input" placeholder="Написать сообщение..." autocomplete="off">
-    <button id="send-btn" onclick="send()">🚀</button>
+    <input type="text" id="msg-input" placeholder="Написать..." autocomplete="off">
+    <button id="send-btn" onclick="sendMsg()" style="background:var(--accent); border:none; width:45px; height:45px; border-radius:50%; color:white;">🚀</button>
 </footer>
 
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
     import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-    import { getDatabase, ref, push, onChildAdded, onChildRemoved, remove, serverTimestamp, query, limitToLast } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+    import { getDatabase, ref, push, onChildAdded, serverTimestamp, query, limitToLast, get, child, update } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
     const firebaseConfig = {
         apiKey: "AIzaSyD2KBDPMea8hWT4vv9ac613bQboI4hpAVU",
@@ -88,35 +102,91 @@
     const provider = new GoogleAuthProvider();
 
     let user = null;
+    let selectedUID = null;
     const MASTER_EMAIL = "skinsfarmy@gmail.com";
 
-    window.login = () => signInWithPopup(auth, provider).catch(e => alert("Ошибка входа: " + e.message));
-    window.logout = () => signOut(auth);
+    window.login = () => signInWithPopup(auth, provider);
+    window.logout = () => signOut(auth).then(() => location.reload());
 
-    onAuthStateChanged(auth, (u) => {
+    onAuthStateChanged(auth, async (u) => {
         if (u) {
             user = u;
-            document.getElementById('login-screen').style.display = 'none';
-            document.getElementById('my-name').innerText = user.displayName;
-            document.getElementById('my-pic').src = user.photoURL;
-            if (user.email === MASTER_EMAIL) {
-                document.getElementById('my-rank').innerText = "СОЗДАТЕЛЬ";
-                document.getElementById('my-rank').style.color = "#ea4335";
-                document.body.classList.add('is-boss');
+            // Проверка бана
+            const banned = await get(child(ref(db), `banned/${user.uid}`));
+            if (banned.exists()) {
+                alert("ВЫ ЗАБАНЕНЫ НАВСЕГДА!");
+                signOut(auth);
+                return;
             }
+
+            document.getElementById('login-screen').style.display = 'none';
+            if (user.email === MASTER_EMAIL) document.body.classList.add('is-boss');
+            
+            // Получаем или создаем профиль
+            const profile = await get(child(ref(db), `users/${user.uid}`));
+            if (!profile.exists()) {
+                await update(ref(db, `users/${user.uid}`), { name: user.displayName, pic: user.photoURL, status: "Новичок", id: user.uid });
+            }
+            syncHeader();
         } else {
             document.getElementById('login-screen').style.display = 'flex';
         }
     });
 
-    window.send = () => {
+    function syncHeader() {
+        get(child(ref(db), `users/${user.uid}`)).then(s => {
+            document.getElementById('my-name').innerText = s.val().name;
+            document.getElementById('my-pic').src = s.val().pic;
+        });
+    }
+
+    // --- ФУНКЦИИ ПРОФИЛЯ ---
+    window.openProfile = async (uid) => {
+        selectedUID = uid;
+        const s = await get(child(ref(db), `users/${uid}`));
+        const data = s.val();
+        document.getElementById('view-pic').src = data.pic;
+        document.getElementById('view-name').innerText = data.name;
+        document.getElementById('view-status').innerText = data.status;
+        document.getElementById('view-id').innerText = "UID: " + uid;
+        
+        document.getElementById('edit-fields').style.display = (uid === user.uid) ? 'block' : 'none';
+        document.getElementById('modal-profile').style.display = 'flex';
+    };
+
+    window.openMyProfile = () => openProfile(user.uid);
+    window.closeModal = () => document.getElementById('modal-profile').style.display = 'none';
+
+    window.saveProfile = async () => {
+        const newName = document.getElementById('edit-name').value.trim();
+        const newStatus = document.getElementById('edit-status').value.trim();
+        const updates = {};
+        if (newName) updates.name = newName;
+        if (newStatus) updates.status = newStatus;
+        await update(ref(db, `users/${user.uid}`), updates);
+        alert("Профиль обновлен!");
+        syncHeader();
+        closeModal();
+    };
+
+    window.banUser = async () => {
+        if (confirm("ЗАБАНИТЬ ЭТОТ ID?")) {
+            await update(ref(db, `banned/${selectedUID}`), { reason: "Нарушение правил", by: user.email });
+            alert("Пользователь заблокирован!");
+            closeModal();
+        }
+    };
+
+    // --- ЧАТ ---
+    window.sendMsg = async () => {
         const text = document.getElementById('msg-input').value.trim();
         if (text && user) {
+            const s = await get(child(ref(db), `users/${user.uid}`));
             push(ref(db, 'chat_data'), {
-                u: user.displayName,
-                p: user.photoURL,
+                uid: user.uid,
+                u: s.val().name,
+                p: s.val().pic,
                 m: text,
-                e: user.email,
                 t: serverTimestamp(),
                 a: (user.email === MASTER_EMAIL)
             });
@@ -124,33 +194,23 @@
         }
     };
 
-    onChildAdded(query(ref(db, 'chat_data'), limitToLast(50)), (snap) => {
+    onChildAdded(query(ref(db, 'chat_data'), limitToLast(40)), (snap) => {
         const d = snap.val();
-        const id = snap.key;
-        const isMe = user && d.e === user.email;
-        const isAdmin = d.a === true;
-
         const div = document.createElement('div');
-        div.className = `msg ${isMe ? 'is-me' : ''} ${isAdmin ? 'is-admin' : ''}`;
-        div.id = 'm-' + id;
+        div.className = `msg ${user && d.uid === user.uid ? 'is-me' : ''}`;
         div.innerHTML = `
-            ${isAdmin ? '<span class="admin-badge">ADMIN</span>' : ''}
-            <div style="display:flex; align-items:center; gap:6px; margin-bottom:5px;">
-                <img src="${d.p}" style="width:18px; height:18px; border-radius:50%;">
-                <span style="font-size:12px; font-weight:bold; color:${isAdmin ? '#ea4335' : (isMe ? '#4285F4' : '#888')}">${escape(d.u)}</span>
+            <div class="msg-header" onclick="openProfile('${d.uid}')">
+                <img src="${d.p}">
+                <span style="font-size:11px; font-weight:bold; color:${d.a ? '#ea4335' : '#4285F4'}">${escape(d.u)}</span>
             </div>
-            <div style="font-size:15px; line-height:1.4;">${escape(d.m)}</div>
-            <button class="del-btn" onclick="deleteMsg('${id}')">×</button>
+            <div style="font-size:14px;">${escape(d.m)}</div>
         `;
         document.getElementById('chat-window').appendChild(div);
         document.getElementById('chat-window').scrollTo(0, document.getElementById('chat-window').scrollHeight);
     });
 
-    window.deleteMsg = (id) => { if(confirm("Удалить?")) remove(ref(db, `chat_data/${id}`)); };
-    onChildRemoved(ref(db, 'chat_data'), (s) => document.getElementById('m-' + s.key)?.remove());
-
     function escape(s) { let t = document.createElement('div'); t.textContent = s; return t.innerHTML; }
-    document.getElementById('msg-input').onkeypress = (e) => { if(e.key === 'Enter') window.send(); };
+    document.getElementById('msg-input').onkeypress = (e) => { if(e.key === 'Enter') window.sendMsg(); };
 </script>
 
 </body>
